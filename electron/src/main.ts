@@ -126,6 +126,19 @@ ipcMain.handle('update:install-now', () => {
   autoUpdater.quitAndInstall();
 });
 
+// Electron's built-in Chromium PDF viewer (webPreferences.plugins) has a long history of not
+// reliably loading in a freshly-opened BrowserWindow, especially in packaged apps (see
+// electron/electron#9412, #14385) — confirmed here too: it worked in dev on macOS but still fell
+// back to a blank window + forced save dialog in the packaged Windows build. Handing the actual
+// file off to the OS's own PDF viewer via shell.openPath sidesteps Electron's PDF plugin entirely.
+ipcMain.handle('shell:open-path', async (_event, filePath: string) => {
+  const error = await shell.openPath(filePath);
+  if (error) {
+    log.error('[open-pdf]', error, filePath);
+  }
+  return { success: !error, error: error || undefined };
+});
+
 function resolveBackendCommand(): { command: string; args: string[]; cwd: string } {
   if (app.isPackaged) {
     const exeName = process.platform === 'win32' ? 'MaddisLedger.Api.exe' : 'MaddisLedger.Api';
@@ -199,18 +212,10 @@ function createMainWindow(): void {
     },
   });
 
-  // PDF links point at the backend and open in a new window using Chromium's built-in PDF viewer —
-  // which requires webPreferences.plugins explicitly enabled on that new window, or it silently
-  // falls back to treating the response as a download (a blank popup plus a save dialog, never
-  // actually showing the PDF). Anything else (external links) is handed to the OS browser.
-  // In dev mode the main window is loaded from the Vite dev server, not the backend's own origin,
-  // so relative PDF links resolve against that dev server (which proxies /api to the backend) —
-  // both origins need to be trusted, or dev-mode links wrongly fall through to the OS browser.
-  const trustedOrigins = app.isPackaged ? [BACKEND_URL] : [BACKEND_URL, DEV_FRONTEND_URL];
+  // PDFs are opened via shell.openPath (see the 'shell:open-path' handler above), not by
+  // navigating a new window — so any window.open/target=_blank at this point is an external link;
+  // hand it to the OS's default browser instead of letting Electron open an in-app popup for it.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (trustedOrigins.some((origin) => url.startsWith(origin))) {
-      return { action: 'allow', overrideBrowserWindowOptions: { webPreferences: { plugins: true } } };
-    }
     shell.openExternal(url);
     return { action: 'deny' };
   });

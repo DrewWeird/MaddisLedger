@@ -14,6 +14,7 @@ declare global {
       appVersion: string;
       onUpdateStatus: (callback: (payload: UpdateStatus) => void) => void;
       installUpdateNow: () => Promise<void>;
+      openPath: (filePath: string) => Promise<{ success: boolean; error?: string }>;
     };
   }
 }

@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('maddisLedger', {
     ipcRenderer.on('update-status', (_event, payload) => callback(payload));
   },
   installUpdateNow: () => ipcRenderer.invoke('update:install-now'),
+  openPath: (filePath: string) => ipcRenderer.invoke('shell:open-path', filePath),
 });

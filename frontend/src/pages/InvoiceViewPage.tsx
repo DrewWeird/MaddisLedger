@@ -6,6 +6,7 @@ import { notifications } from '@mantine/notifications';
 import { useInvoice, useVoidInvoice } from '../api/invoices';
 import { useDeliveryNotes } from '../api/deliveryNotes';
 import { formatCurrency, formatDate } from '../utils/format';
+import { openPdf } from '../utils/openPdf';
 
 export function InvoiceViewPage() {
   const { id } = useParams();
@@ -40,7 +41,11 @@ export function InvoiceViewPage() {
           {invoice.currency === 'USD' && <Badge color="blue" variant="light">USD</Badge>}
         </Title>
         <Group>
-          <Button variant="default" leftSection={<IconFileTypePdf size={16} />} component="a" href={`/api/invoices/${invoiceId}/pdf`} target="_blank">
+          <Button
+            variant="default"
+            leftSection={<IconFileTypePdf size={16} />}
+            onClick={() => openPdf(invoice.pdfPath, `/api/invoices/${invoiceId}/pdf`)}
+          >
             Open PDF
           </Button>
           {invoice.status === 'Active' && (

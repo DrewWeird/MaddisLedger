@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
 import { useDeliveryNote, useVoidDeliveryNote } from '../api/deliveryNotes';
 import { formatDate } from '../utils/format';
+import { openPdf } from '../utils/openPdf';
 
 export function DeliveryNoteViewPage() {
   const { id } = useParams();
@@ -35,7 +36,11 @@ export function DeliveryNoteViewPage() {
           Delivery Note {note.deliveryNoteNumber} <Badge color={note.status === 'Active' ? 'green' : 'gray'}>{note.status}</Badge>
         </Title>
         <Group>
-          <Button variant="default" leftSection={<IconFileTypePdf size={16} />} component="a" href={`/api/delivery-notes/${deliveryNoteId}/pdf`} target="_blank">
+          <Button
+            variant="default"
+            leftSection={<IconFileTypePdf size={16} />}
+            onClick={() => openPdf(note.pdfPath, `/api/delivery-notes/${deliveryNoteId}/pdf`)}
+          >
             Open PDF
           </Button>
           {note.status === 'Active' && (
