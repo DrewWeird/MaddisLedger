@@ -3,7 +3,8 @@ backend/**/bin/
 backend/**/obj/
 backend/src/MaddisLedger.Api/appsettings.Development.json
 backend/src/MaddisLedger.Api/App_Data/
-backend/**/wwwroot/
+backend/**/wwwroot/*
+!backend/**/wwwroot/.gitkeep
 backend/publish/
 
 # Node / frontend

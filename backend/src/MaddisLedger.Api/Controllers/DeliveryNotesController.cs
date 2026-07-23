@@ -46,6 +46,8 @@ public class DeliveryNotesController : ControllerBase
         if (string.IsNullOrWhiteSpace(note.PdfPath) || !System.IO.File.Exists(note.PdfPath))
             throw DomainException.NotFound("DeliveryNote PDF", id);
 
-        return PhysicalFile(note.PdfPath, "application/pdf", $"{note.DeliveryNoteNumber}.pdf");
+        // No fileDownloadName here deliberately — passing one sets Content-Disposition: attachment,
+        // which forces a browser download instead of rendering the PDF inline in the viewer.
+        return PhysicalFile(note.PdfPath, "application/pdf");
     }
 }

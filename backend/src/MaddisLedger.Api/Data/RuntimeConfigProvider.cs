@@ -27,6 +27,7 @@ public static class RuntimeConfigProvider
                     fromFile.DataDirectory = Path.Combine(Path.GetDirectoryName(configPath)!, "data");
                 }
 
+                fromFile.DataDirectory = Path.GetFullPath(fromFile.DataDirectory);
                 return fromFile;
             }
         }
@@ -41,12 +42,15 @@ public static class RuntimeConfigProvider
                 "or set Database:ConnectionString in appsettings.Development.json for local development.");
         }
 
+        // PhysicalFileResult (used to serve generated PDFs back to the client) requires an absolute
+        // path and throws otherwise — GetFullPath guarantees that regardless of what's configured
+        // or what the process's current working directory happens to be.
         return new AppRuntimeConfig
         {
             ConnectionString = devConnectionString,
-            DataDirectory = string.IsNullOrWhiteSpace(devDataDirectory)
+            DataDirectory = Path.GetFullPath(string.IsNullOrWhiteSpace(devDataDirectory)
                 ? Path.Combine(AppContext.BaseDirectory, "App_Data")
-                : devDataDirectory
+                : devDataDirectory)
         };
     }
 }

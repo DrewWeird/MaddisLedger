@@ -58,7 +58,7 @@ public class InvoiceService
 
         // ZAR invoices always convert 1:1 — a non-1 rate here would be a data-integrity bug on the
         // caller's side (the frontend never sends one, but guard against it regardless).
-        if (currency == CurrencyCode.Zar && dto.ExchangeRateToZar != 1)
+        if (currency == CurrencyCode.ZAR && dto.ExchangeRateToZar != 1)
             throw new DomainException("A ZAR invoice's exchange rate must be exactly 1.");
 
         await using var transaction = await _db.Database.BeginTransactionAsync();
@@ -76,7 +76,7 @@ public class InvoiceService
             Status = DocumentStatus.Active,
             Currency = currency,
             ExchangeRateToZar = dto.ExchangeRateToZar,
-            ExchangeRateAsOf = currency == CurrencyCode.Zar ? null : (dto.ExchangeRateAsOf ?? dto.IssueDate)
+            ExchangeRateAsOf = currency == CurrencyCode.ZAR ? null : (dto.ExchangeRateAsOf ?? dto.IssueDate)
         };
 
         var sortOrder = 0;

@@ -19,7 +19,7 @@ public class InvoicePdfDocument : IDocument
     {
         _invoice = invoice;
         _profile = profile;
-        _currencyCulture = invoice.Currency == CurrencyCode.Usd ? UsdCulture : ZarCulture;
+        _currencyCulture = invoice.Currency == CurrencyCode.USD ? UsdCulture : ZarCulture;
     }
 
     public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -73,7 +73,7 @@ public class InvoicePdfDocument : IDocument
                     }
                 });
 
-                if (_invoice.Currency == CurrencyCode.Usd)
+                if (_invoice.Currency == CurrencyCode.USD)
                 {
                     column.Item().PaddingTop(10).AlignRight().Text(
                         $"1 USD = R{_invoice.ExchangeRateToZar:F2} as of {_invoice.ExchangeRateAsOf:dd/MM/yyyy}")

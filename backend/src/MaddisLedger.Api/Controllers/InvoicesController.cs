@@ -50,6 +50,8 @@ public class InvoicesController : ControllerBase
         if (string.IsNullOrWhiteSpace(invoice.PdfPath) || !System.IO.File.Exists(invoice.PdfPath))
             throw DomainException.NotFound("Invoice PDF", id);
 
-        return PhysicalFile(invoice.PdfPath, "application/pdf", $"{invoice.InvoiceNumber}.pdf");
+        // No fileDownloadName here deliberately — passing one sets Content-Disposition: attachment,
+        // which forces a browser download instead of rendering the PDF inline in the viewer.
+        return PhysicalFile(invoice.PdfPath, "application/pdf");
     }
 }

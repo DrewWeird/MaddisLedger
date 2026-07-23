@@ -1,7 +1,9 @@
 namespace MaddisLedger.Api.Entities;
 
+// Member names are deliberately all-caps: ToString() is used directly as the wire-format currency
+// code (e.g. "ZAR", "USD"), and the frontend's CurrencyCode type expects exactly that casing.
 public enum CurrencyCode
 {
-    Zar = 0,
-    Usd = 1
+    ZAR = 0,
+    USD = 1
 }

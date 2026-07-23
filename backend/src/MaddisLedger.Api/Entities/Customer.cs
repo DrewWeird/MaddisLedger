@@ -10,7 +10,7 @@ public class Customer
     public string? AddressLine2 { get; set; }
     public string? City { get; set; }
     public string? PostalCode { get; set; }
-    public CurrencyCode DefaultCurrency { get; set; } = CurrencyCode.Zar;
+    public CurrencyCode DefaultCurrency { get; set; } = CurrencyCode.ZAR;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

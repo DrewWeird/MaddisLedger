@@ -163,11 +163,17 @@ function createMainWindow(): void {
     },
   });
 
-  // PDF links point at the same-origin backend and open fine in Chromium's built-in PDF viewer
-  // via a new window; anything else (external links) is handed to the OS default browser.
+  // PDF links point at the backend and open in a new window using Chromium's built-in PDF viewer —
+  // which requires webPreferences.plugins explicitly enabled on that new window, or it silently
+  // falls back to treating the response as a download (a blank popup plus a save dialog, never
+  // actually showing the PDF). Anything else (external links) is handed to the OS browser.
+  // In dev mode the main window is loaded from the Vite dev server, not the backend's own origin,
+  // so relative PDF links resolve against that dev server (which proxies /api to the backend) —
+  // both origins need to be trusted, or dev-mode links wrongly fall through to the OS browser.
+  const trustedOrigins = app.isPackaged ? [BACKEND_URL] : [BACKEND_URL, DEV_FRONTEND_URL];
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith(BACKEND_URL)) {
-      return { action: 'allow' };
+    if (trustedOrigins.some((origin) => url.startsWith(origin))) {
+      return { action: 'allow', overrideBrowserWindowOptions: { webPreferences: { plugins: true } } };
     }
     shell.openExternal(url);
     return { action: 'deny' };
