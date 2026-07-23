@@ -1,0 +1,22 @@
+{
+  "name": "maddisledger-electron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Maddi's Sweet Temptations - Stock & POS System",
+  "main": "dist/main.js",
+  "author": "Maddi's Sweet Temptations",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.0.20",
+    "typescript": "~6.0.2"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  }
+}

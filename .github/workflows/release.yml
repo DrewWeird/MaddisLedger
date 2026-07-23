@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Publish backend (win-x64, self-contained, single-file)
+        shell: bash
+        run: |
+          dotnet publish backend/src/MaddisLedger.Api/MaddisLedger.Api.csproj \
+            -c Release -r win-x64 --self-contained true \
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+            -o backend/publish
+
+      - name: Build frontend
+        shell: bash
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Copy frontend build into backend wwwroot
+        shell: bash
+        run: |
+          mkdir -p backend/publish/wwwroot
+          cp -r frontend/dist/. backend/publish/wwwroot/
+
+      - name: Set electron app version from tag
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          cd electron
+          npm version "$TAG" --no-git-tag-version --allow-same-version
+
+      - name: Install electron dependencies
+        shell: bash
+        run: |
+          cd electron
+          npm ci
+
+      - name: Build electron main process
+        shell: bash
+        run: |
+          cd electron
+          npm run build
+
+      - name: Package and publish Electron app
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd electron
+          npx electron-builder --win --x64 --publish always

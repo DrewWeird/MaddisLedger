@@ -1,0 +1,12 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "Database": {
+    "ConnectionString": "Server=localhost;Port=3306;Database=maddisledger_dev;User=maddisledger_app;Password=CHANGE_ME;",
+    "DataDirectory": "App_Data"
+  }
+}

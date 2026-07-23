@@ -1,0 +1,38 @@
+appId: com.maddisSweetTemptations.ledger
+productName: MaddisLedger
+copyright: Copyright © Maddi's Sweet Temptations
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - splash/**/*
+  - db-setup/**/*
+  - package.json
+
+extraResources:
+  - from: ../backend/publish
+    to: backend
+    filter:
+      - "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+publish:
+  provider: github
+  owner: DrewWeird
+  repo: MaddisLedger
