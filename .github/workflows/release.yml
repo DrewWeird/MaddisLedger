@@ -74,10 +74,13 @@ jobs:
         # each independently checks "does the release exist yet?" before uploading — under a race,
         # both see "no" and both try to create it, and the second create fails with a 422 (already
         # exists), which is treated as fatal and aborts the whole publish step. Pre-creating the
-        # release here means electron-builder only ever needs to upload assets to an already-
-        # existing release, sidestepping the race entirely.
+        # release here removes that race. It must be created as a --draft: electron-builder treats
+        # an existing *published* release as already finalized and silently skips uploading to it
+        # entirely (confirmed — a prior attempt at this fix with a published release "succeeded"
+        # with zero assets attached). A draft signals "still in progress," so electron-builder
+        # uploads to it and then publishes it itself, per electron-builder.yml's releaseType: release.
         run: |
-          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes || echo "Release already exists, continuing"
+          gh release create "${GITHUB_REF_NAME}" --draft --title "${GITHUB_REF_NAME}" --generate-notes || echo "Release already exists, continuing"
 
       - name: Package and publish Electron app
         shell: bash
