@@ -46,4 +46,27 @@ public class DashboardController : ControllerBase
 
         return new DashboardSummaryDto(todaysInvoices.Count, totalZar, lowStockCount);
     }
+
+    [HttpGet("sales-trend")]
+    public async Task<ActionResult<List<SalesTrendPointDto>>> SalesTrend([FromQuery] int days = 7)
+    {
+        days = Math.Clamp(days, 1, 90);
+        var today = DateTime.UtcNow.Date;
+        var startDate = today.AddDays(-(days - 1));
+
+        var invoices = await _db.Invoices.AsNoTracking()
+            .Where(i => i.Status == DocumentStatus.Active && i.IssueDate >= startDate && i.IssueDate < today.AddDays(1))
+            .Select(i => new { i.IssueDate, ZarTotal = i.Total * i.ExchangeRateToZar })
+            .ToListAsync();
+
+        var byDate = invoices.GroupBy(i => i.IssueDate.Date).ToDictionary(g => g.Key, g => g.Sum(i => i.ZarTotal));
+
+        var points = new List<SalesTrendPointDto>();
+        for (var date = startDate; date <= today; date = date.AddDays(1))
+        {
+            points.Add(new SalesTrendPointDto(date, byDate.GetValueOrDefault(date, 0)));
+        }
+
+        return points;
+    }
 }

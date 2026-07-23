@@ -10,3 +10,13 @@ public record LedgerSummaryDto(
     decimal NetProfitZar,
     int InvoiceCount,
     int SupplierInvoiceCount);
+
+public record LedgerTrendPointDto(
+    DateTime PeriodStart,
+    string PeriodLabel,
+    decimal RevenueZar,
+    decimal CostOfGoodsSoldZar,
+    decimal OtherExpensesZar,
+    decimal NetProfitZar);
+
+public record CategoryBreakdownPointDto(string Category, decimal RevenueZar);

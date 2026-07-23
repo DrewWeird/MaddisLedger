@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Badge,
   Button,
@@ -36,6 +36,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+// e.g. Category "Chutney" + Name "Appelkoos" + Size "500g" -> "CHUT-APPE-500"
+function computeSuggestedCode(category: string, name: string, size: string): string {
+  const parts = [category.trim().slice(0, 4), name.trim().slice(0, 4)];
+  if (size.trim()) parts.push(size.trim().slice(0, 3));
+  return parts.filter(Boolean).join('-').toUpperCase();
+}
+
 const EMPTY_VALUES: FormValues = {
   code: '',
   category: '',
@@ -53,24 +60,40 @@ export function StockPage() {
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
   const { data: items, isLoading } = useStockItems({ search: search || undefined });
   const createMutation = useCreateStockItem();
   const updateMutation = useUpdateStockItem();
 
-  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: EMPTY_VALUES,
   });
 
+  const category = watch('category');
+  const name = watch('name');
+  const size = watch('size');
+
+  // Live-fills Code from Category/Name/Size while creating a new item, until the user types into
+  // Code directly — at which point their edit takes over and stops being overwritten.
+  useEffect(() => {
+    if (!editingItem && !codeManuallyEdited) {
+      setValue('code', computeSuggestedCode(category, name, size ?? ''));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, name, size, editingItem, codeManuallyEdited]);
+
   function openCreateModal() {
     setEditingItem(null);
+    setCodeManuallyEdited(false);
     reset(EMPTY_VALUES);
     setModalOpen(true);
   }
 
   function openEditModal(item: StockItem) {
     setEditingItem(item);
+    setCodeManuallyEdited(true);
     reset({ ...item, size: item.size ?? '' });
     setModalOpen(true);
   }
@@ -159,7 +182,23 @@ export function StockPage() {
             <TextInput label="Category" placeholder="e.g. Chutney" {...register('category')} error={errors.category?.message} />
             <TextInput label="Name" placeholder="e.g. Appelkoos" {...register('name')} error={errors.name?.message} />
             <TextInput label="Size (optional)" placeholder="e.g. 500g" {...register('size')} error={errors.size?.message} />
-            <TextInput label="Code" placeholder="e.g. CHUT-APR-500" {...register('code')} error={errors.code?.message} />
+            <Controller
+              name="code"
+              control={control}
+              render={({ field }) => (
+                <TextInput
+                  label="Code"
+                  description="Auto-filled from Category/Name/Size — edit freely to override"
+                  placeholder="e.g. CHUT-APPE-500"
+                  value={field.value}
+                  onChange={(e) => {
+                    setCodeManuallyEdited(true);
+                    field.onChange(e.currentTarget.value.toUpperCase());
+                  }}
+                  error={errors.code?.message}
+                />
+              )}
+            />
             <Controller
               name="unitPrice"
               control={control}

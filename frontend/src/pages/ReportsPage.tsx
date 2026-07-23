@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Card, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Card, Group, SegmentedControl, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { useLedgerSummary } from '../api/reports';
+import { useCategoryBreakdown, useLedgerSummary, useLedgerTrend } from '../api/reports';
+import { LedgerTrendChart } from '../components/LedgerTrendChart';
+import { CategoryBreakdownChart } from '../components/CategoryBreakdownChart';
 import { formatCurrency } from '../utils/format';
 
 function startOfMonth(date: Date): Date {
@@ -15,8 +17,11 @@ function endOfMonth(date: Date): Date {
 export function ReportsPage() {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
+  const [bucket, setBucket] = useState<'week' | 'month'>('week');
 
   const { data: summary, isLoading } = useLedgerSummary(from.toISOString(), to.toISOString());
+  const { data: trend } = useLedgerTrend(from.toISOString(), to.toISOString(), bucket);
+  const { data: categoryBreakdown } = useCategoryBreakdown(from.toISOString(), to.toISOString());
 
   return (
     <Stack>
@@ -55,6 +60,32 @@ export function ReportsPage() {
           </Text>
         </Card>
       </SimpleGrid>
+
+      <Card withBorder padding="lg">
+        <Group justify="space-between" mb="sm">
+          <Title order={4}>Revenue, Cost &amp; Expenses Trend</Title>
+          <SegmentedControl
+            size="xs"
+            value={bucket}
+            onChange={(v) => setBucket(v as 'week' | 'month')}
+            data={[{ label: 'Weekly', value: 'week' }, { label: 'Monthly', value: 'month' }]}
+          />
+        </Group>
+        {trend && trend.length > 0 ? (
+          <LedgerTrendChart data={trend} />
+        ) : (
+          <Text c="dimmed" size="sm">No activity in this period.</Text>
+        )}
+      </Card>
+
+      <Card withBorder padding="lg">
+        <Title order={4} mb="sm">Revenue by Category</Title>
+        {categoryBreakdown && categoryBreakdown.length > 0 ? (
+          <CategoryBreakdownChart data={categoryBreakdown} />
+        ) : (
+          <Text c="dimmed" size="sm">No sales in this period.</Text>
+        )}
+      </Card>
     </Stack>
   );
 }

@@ -1,4 +1,4 @@
-import { AppShell, Badge, Group, NavLink, Text } from '@mantine/core';
+import { AppShell, Badge, Group, Image, NavLink, Text } from '@mantine/core';
 import {
   IconChartBar,
   IconFileInvoice,
@@ -35,9 +35,7 @@ export function AppLayout() {
   return (
     <AppShell navbar={{ width: 220, breakpoint: 'sm' }} padding="md">
       <AppShell.Navbar p="md" style={{ display: 'flex', flexDirection: 'column' }}>
-        <Text fw={700} size="lg" mb="md">
-          Maddi's Sweet Temptations
-        </Text>
+        <Image src="/logo.png" alt="Maddi's Sweet Temptations" mb="md" fit="contain" h={60} />
         <div style={{ flex: 1 }}>
           {NAV_ITEMS.map((item) => (
             <NavLink

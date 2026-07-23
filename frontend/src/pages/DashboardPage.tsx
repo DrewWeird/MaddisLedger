@@ -1,11 +1,15 @@
-import { Alert, Card, Group, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
+import { useState } from 'react';
+import { Alert, Card, Group, SegmentedControl, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
 import { IconAlertTriangle } from '@tabler/icons-react';
-import { useDashboardSummary, useLowStockItems } from '../api/dashboard';
+import { useDashboardSummary, useLowStockItems, useSalesTrend } from '../api/dashboard';
+import { SalesTrendChart } from '../components/SalesTrendChart';
 import { formatCurrency } from '../utils/format';
 
 export function DashboardPage() {
+  const [trendDays, setTrendDays] = useState('7');
   const { data: summary } = useDashboardSummary();
   const { data: lowStock } = useLowStockItems();
+  const { data: salesTrend } = useSalesTrend(Number(trendDays));
 
   return (
     <Stack>
@@ -25,6 +29,19 @@ export function DashboardPage() {
           <Text size="xl" fw={700}>{summary?.lowStockItemCount ?? '—'}</Text>
         </Card>
       </SimpleGrid>
+
+      <Card withBorder padding="lg">
+        <Group justify="space-between" mb="sm">
+          <Title order={4}>Sales Trend</Title>
+          <SegmentedControl
+            size="xs"
+            value={trendDays}
+            onChange={setTrendDays}
+            data={[{ label: '7 days', value: '7' }, { label: '30 days', value: '30' }]}
+          />
+        </Group>
+        {salesTrend && <SalesTrendChart data={salesTrend} />}
+      </Card>
 
       {lowStock && lowStock.length > 0 && (
         <Card withBorder padding="lg">

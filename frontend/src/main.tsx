@@ -7,8 +7,10 @@ import { BrowserRouter } from 'react-router-dom'
 import '@mantine/core/styles.css'
 import '@mantine/dates/styles.css'
 import '@mantine/notifications/styles.css'
+import '@mantine/charts/styles.css'
 import './index.css'
 import App from './App.tsx'
+import { theme } from './theme.ts'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +23,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider defaultColorScheme="auto">
+    <MantineProvider theme={theme} defaultColorScheme="auto">
       <Notifications />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
