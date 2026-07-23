@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           cd frontend
-          npm ci
+          npm install
           npm run build
 
       - name: Copy frontend build into backend wwwroot
@@ -58,7 +58,7 @@ jobs:
         shell: bash
         run: |
           cd electron
-          npm ci
+          npm install
 
       - name: Build electron main process
         shell: bash
