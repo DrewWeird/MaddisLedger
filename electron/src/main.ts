@@ -3,6 +3,15 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { autoUpdater } from 'electron-updater';
+import log from 'electron-log';
+
+// electron-updater is silent by default (no logs anywhere, no UI feedback beyond a native
+// notification once a download completes) — wire up a log file and forward every stage to the
+// renderer so update problems are actually diagnosable instead of just "nothing happens".
+log.transports.file.level = 'info';
+autoUpdater.logger = log;
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 
 const BACKEND_PORT = 5217;
 const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
@@ -89,6 +98,33 @@ function sendSplashMessage(message: string): void {
   console.log(message);
   splashWindow?.webContents.send('api-startup-message', message);
 }
+
+type UpdateStatus =
+  | { status: 'checking' }
+  | { status: 'available'; version: string }
+  | { status: 'not-available' }
+  | { status: 'downloading'; percent: number }
+  | { status: 'downloaded'; version: string }
+  | { status: 'error'; message: string };
+
+function sendUpdateStatus(payload: UpdateStatus): void {
+  log.info('[auto-update]', payload);
+  mainWindow?.webContents.send('update-status', payload);
+}
+
+function wireAutoUpdaterEvents(): void {
+  autoUpdater.on('checking-for-update', () => sendUpdateStatus({ status: 'checking' }));
+  autoUpdater.on('update-available', (info) => sendUpdateStatus({ status: 'available', version: info.version }));
+  autoUpdater.on('update-not-available', () => sendUpdateStatus({ status: 'not-available' }));
+  autoUpdater.on('download-progress', (progress) =>
+    sendUpdateStatus({ status: 'downloading', percent: Math.round(progress.percent) }));
+  autoUpdater.on('update-downloaded', (info) => sendUpdateStatus({ status: 'downloaded', version: info.version }));
+  autoUpdater.on('error', (err) => sendUpdateStatus({ status: 'error', message: err.message }));
+}
+
+ipcMain.handle('update:install-now', () => {
+  autoUpdater.quitAndInstall();
+});
 
 function resolveBackendCommand(): { command: string; args: string[]; cwd: string } {
   if (app.isPackaged) {
@@ -185,7 +221,8 @@ function createMainWindow(): void {
     splashWindow?.close();
     mainWindow?.show();
     if (app.isPackaged) {
-      autoUpdater.checkForUpdatesAndNotify().catch((err) => console.error('Auto-update check failed', err));
+      wireAutoUpdaterEvents();
+      autoUpdater.checkForUpdates().catch((err) => sendUpdateStatus({ status: 'error', message: err.message }));
     }
   });
 
