@@ -17,6 +17,9 @@ public class AppDbContext : DbContext
     public DbSet<DeliveryNote> DeliveryNotes => Set<DeliveryNote>();
     public DbSet<DeliveryNoteLineItem> DeliveryNoteLineItems => Set<DeliveryNoteLineItem>();
     public DbSet<DocumentCounter> DocumentCounters => Set<DocumentCounter>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<SupplierInvoice> SupplierInvoices => Set<SupplierInvoice>();
+    public DbSet<SupplierPayment> SupplierPayments => Set<SupplierPayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,6 +27,7 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.CostPrice).HasPrecision(18, 2);
         });
 
         modelBuilder.Entity<Customer>();
@@ -34,6 +38,7 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.InvoiceNumber).IsUnique();
             entity.Property(e => e.Total).HasPrecision(18, 2);
+            entity.Property(e => e.ExchangeRateToZar).HasPrecision(18, 6);
 
             entity.HasOne(e => e.Customer)
                 .WithMany()
@@ -54,6 +59,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<InvoiceLineItem>(entity =>
         {
             entity.Property(e => e.UnitPriceSnapshot).HasPrecision(18, 2);
+            entity.Property(e => e.CostPriceSnapshot).HasPrecision(18, 2);
             entity.Property(e => e.LineTotal).HasPrecision(18, 2);
 
             entity.HasOne(e => e.StockItem)
@@ -88,6 +94,28 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<DocumentCounter>(entity =>
         {
             entity.HasKey(e => e.DocumentType);
+        });
+
+        modelBuilder.Entity<Supplier>();
+
+        modelBuilder.Entity<SupplierInvoice>(entity =>
+        {
+            entity.Property(e => e.Total).HasPrecision(18, 2);
+
+            entity.HasOne(e => e.Supplier)
+                .WithMany()
+                .HasForeignKey(e => e.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(e => e.Payments)
+                .WithOne(p => p.SupplierInvoice)
+                .HasForeignKey(p => p.SupplierInvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SupplierPayment>(entity =>
+        {
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
         });
     }
 }

@@ -36,7 +36,8 @@ export function InvoiceViewPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={2}>
-          Invoice {invoice.invoiceNumber} <Badge color={invoice.status === 'Active' ? 'green' : 'gray'}>{invoice.status}</Badge>
+          Invoice {invoice.invoiceNumber} <Badge color={invoice.status === 'Active' ? 'green' : 'gray'}>{invoice.status}</Badge>{' '}
+          {invoice.currency === 'USD' && <Badge color="blue" variant="light">USD</Badge>}
         </Title>
         <Group>
           <Button variant="default" leftSection={<IconFileTypePdf size={16} />} component="a" href={`/api/invoices/${invoiceId}/pdf`} target="_blank">
@@ -86,8 +87,8 @@ export function InvoiceViewPage() {
             <Table.Tr key={line.id}>
               <Table.Td>{line.descriptionSnapshot}</Table.Td>
               <Table.Td>{line.quantity}</Table.Td>
-              <Table.Td>{formatCurrency(line.unitPriceSnapshot)}</Table.Td>
-              <Table.Td>{formatCurrency(line.lineTotal)}</Table.Td>
+              <Table.Td>{formatCurrency(line.unitPriceSnapshot, invoice.currency)}</Table.Td>
+              <Table.Td>{formatCurrency(line.lineTotal, invoice.currency)}</Table.Td>
               <Table.Td>{line.deliveredQuantity} / {line.quantity}</Table.Td>
             </Table.Tr>
           ))}
@@ -95,8 +96,15 @@ export function InvoiceViewPage() {
       </Table>
 
       <Group justify="flex-end">
-        <Title order={3}>Total: {formatCurrency(invoice.total)}</Title>
+        <Title order={3}>Total: {formatCurrency(invoice.total, invoice.currency)}</Title>
       </Group>
+
+      {invoice.currency === 'USD' && (
+        <Text size="xs" c="dimmed" ta="right">
+          1 USD = R{invoice.exchangeRateToZar.toFixed(2)}
+          {invoice.exchangeRateAsOf && ` as of ${formatDate(invoice.exchangeRateAsOf)}`}
+        </Text>
+      )}
 
       {invoice.notes && (
         <Stack gap={2}>

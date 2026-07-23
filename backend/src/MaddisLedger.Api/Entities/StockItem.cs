@@ -8,6 +8,8 @@ public class StockItem
     public string Name { get; set; } = string.Empty;
     public string? Size { get; set; }
     public decimal UnitPrice { get; set; }
+    // What the item costs Maddi to make/procure — internal only, never shown on customer-facing documents.
+    public decimal CostPrice { get; set; }
     public int QuantityOnHand { get; set; }
     public int QuantityOnOrder { get; set; }
     public int ReorderLevel { get; set; }

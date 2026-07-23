@@ -50,7 +50,8 @@ public class CustomersController : ControllerBase
             AddressLine1 = dto.AddressLine1,
             AddressLine2 = dto.AddressLine2,
             City = dto.City,
-            PostalCode = dto.PostalCode
+            PostalCode = dto.PostalCode,
+            DefaultCurrency = ParseCurrency(dto.DefaultCurrency)
         };
 
         _db.Customers.Add(customer);
@@ -71,6 +72,7 @@ public class CustomersController : ControllerBase
         customer.AddressLine2 = dto.AddressLine2;
         customer.City = dto.City;
         customer.PostalCode = dto.PostalCode;
+        customer.DefaultCurrency = ParseCurrency(dto.DefaultCurrency);
         customer.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -79,5 +81,10 @@ public class CustomersController : ControllerBase
     }
 
     private static CustomerDto ToDto(Customer c) => new(
-        c.Id, c.Name, c.Phone, c.Email, c.AddressLine1, c.AddressLine2, c.City, c.PostalCode);
+        c.Id, c.Name, c.Phone, c.Email, c.AddressLine1, c.AddressLine2, c.City, c.PostalCode, c.DefaultCurrency.ToString());
+
+    private static CurrencyCode ParseCurrency(string value) =>
+        Enum.TryParse<CurrencyCode>(value, true, out var currency)
+            ? currency
+            : throw new DomainException($"Unknown currency '{value}'.");
 }

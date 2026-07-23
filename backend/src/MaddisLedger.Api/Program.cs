@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MaddisLedger.Api.Data;
 using MaddisLedger.Api.Services;
+using MaddisLedger.Api.Services.ExchangeRate;
 using MaddisLedger.Api.Services.Numbering;
 using MaddisLedger.Api.Services.Pdf;
 using QuestPDF.Infrastructure;
@@ -26,6 +27,15 @@ builder.Services.AddScoped<NumberingService>();
 builder.Services.AddScoped<PdfService>();
 builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<DeliveryNoteService>();
+builder.Services.AddScoped<SupplierInvoiceService>();
+builder.Services.AddScoped<ReportService>();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<ExchangeRateService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.frankfurter.dev/v1/");
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddProblemDetails();

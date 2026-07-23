@@ -4,6 +4,7 @@ using MaddisLedger.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MaddisLedger.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723100057_AddSuppliersAndSupplierInvoices")]
+    partial class AddSuppliersAndSupplierInvoices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -94,9 +97,6 @@ namespace MaddisLedger.Api.Data.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int>("DefaultCurrency")
-                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
@@ -227,9 +227,6 @@ namespace MaddisLedger.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("Currency")
-                        .HasColumnType("int");
-
                     b.Property<string>("CustomerAddressSnapshot")
                         .HasColumnType("longtext");
 
@@ -239,13 +236,6 @@ namespace MaddisLedger.Api.Data.Migrations
                     b.Property<string>("CustomerNameSnapshot")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("ExchangeRateAsOf")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<decimal>("ExchangeRateToZar")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()

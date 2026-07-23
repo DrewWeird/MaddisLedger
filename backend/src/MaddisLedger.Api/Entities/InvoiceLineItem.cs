@@ -9,6 +9,9 @@ public class InvoiceLineItem
     public StockItem? StockItem { get; set; }
     public string DescriptionSnapshot { get; set; } = string.Empty;
     public decimal UnitPriceSnapshot { get; set; }
+    // Cost price at the time of sale — snapshotted like UnitPriceSnapshot so later cost changes
+    // never rewrite historical profit reporting. Internal only, never shown on PDFs.
+    public decimal CostPriceSnapshot { get; set; }
     public int Quantity { get; set; }
     public decimal LineTotal { get; set; }
     public int SortOrder { get; set; }

@@ -5,6 +5,7 @@ export interface StockItem {
   name: string;
   size: string | null;
   unitPrice: number;
+  costPrice: number;
   quantityOnHand: number;
   quantityOnOrder: number;
   reorderLevel: number;
@@ -12,6 +13,8 @@ export interface StockItem {
 }
 
 export type SaveStockItem = Omit<StockItem, 'id'>;
+
+export type CurrencyCode = 'ZAR' | 'USD';
 
 export interface Customer {
   id: number;
@@ -22,6 +25,7 @@ export interface Customer {
   addressLine2: string | null;
   city: string | null;
   postalCode: string | null;
+  defaultCurrency: CurrencyCode;
 }
 
 export type SaveCustomer = Omit<Customer, 'id'>;
@@ -51,6 +55,7 @@ export interface InvoiceLineItem {
   stockItemId: number;
   descriptionSnapshot: string;
   unitPriceSnapshot: number;
+  costPriceSnapshot: number;
   quantity: number;
   lineTotal: number;
   deliveredQuantity: number;
@@ -66,6 +71,9 @@ export interface Invoice {
   issueDate: string;
   status: DocumentStatus;
   total: number;
+  currency: CurrencyCode;
+  exchangeRateToZar: number;
+  exchangeRateAsOf: string | null;
   notes: string | null;
   pdfPath: string | null;
   createdAt: string;
@@ -80,6 +88,7 @@ export interface InvoiceSummary {
   issueDate: string;
   status: DocumentStatus;
   total: number;
+  currency: CurrencyCode;
 }
 
 export interface CreateInvoiceLineItem {
@@ -92,6 +101,9 @@ export interface CreateInvoice {
   customerId: number;
   issueDate: string;
   notes?: string;
+  currency: CurrencyCode;
+  exchangeRateToZar: number;
+  exchangeRateAsOf?: string;
   lineItems: CreateInvoiceLineItem[];
 }
 
@@ -165,4 +177,56 @@ export interface DashboardSummary {
 
 export interface VoidDocument {
   reason?: string;
+}
+
+export interface Supplier {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  postalCode: string | null;
+}
+
+export type SaveSupplier = Omit<Supplier, 'id'>;
+
+export interface SupplierPayment {
+  id: number;
+  paymentDate: string;
+  amount: number;
+  notes: string | null;
+}
+
+export interface SupplierInvoiceSummary {
+  id: number;
+  supplierId: number;
+  supplierName: string;
+  supplierReference: string;
+  issueDate: string;
+  status: DocumentStatus;
+  total: number;
+  amountPaid: number;
+  amountOutstanding: number;
+}
+
+export interface SupplierInvoice extends SupplierInvoiceSummary {
+  description: string | null;
+  createdAt: string;
+  payments: SupplierPayment[];
+}
+
+export interface CreateSupplierInvoice {
+  supplierId: number;
+  supplierReference: string;
+  issueDate: string;
+  total: number;
+  description?: string;
+}
+
+export interface CreateSupplierPayment {
+  paymentDate: string;
+  amount: number;
+  notes?: string;
 }

@@ -10,12 +10,16 @@ public class InvoicePdfDocument : IDocument
 {
     private readonly Invoice _invoice;
     private readonly BusinessProfile _profile;
+    private readonly CultureInfo _currencyCulture;
+
     private static readonly CultureInfo ZarCulture = CultureInfo.GetCultureInfo("en-ZA");
+    private static readonly CultureInfo UsdCulture = CultureInfo.GetCultureInfo("en-US");
 
     public InvoicePdfDocument(Invoice invoice, BusinessProfile profile)
     {
         _invoice = invoice;
         _profile = profile;
+        _currencyCulture = invoice.Currency == CurrencyCode.Usd ? UsdCulture : ZarCulture;
     }
 
     public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -69,6 +73,13 @@ public class InvoicePdfDocument : IDocument
                     }
                 });
 
+                if (_invoice.Currency == CurrencyCode.Usd)
+                {
+                    column.Item().PaddingTop(10).AlignRight().Text(
+                        $"1 USD = R{_invoice.ExchangeRateToZar:F2} as of {_invoice.ExchangeRateAsOf:dd/MM/yyyy}")
+                        .FontSize(8).FontColor(Colors.Grey.Darken1);
+                }
+
                 column.Item().PaddingTop(10).AlignRight().Row(row =>
                 {
                     row.AutoItem().PaddingRight(20).Text("Total").FontSize(12).Bold();
@@ -92,7 +103,7 @@ public class InvoicePdfDocument : IDocument
         });
     }
 
-    private static string FormatCurrency(decimal value) => value.ToString("C", ZarCulture);
+    private string FormatCurrency(decimal value) => value.ToString("C", _currencyCulture);
 
     private static IContainer HeaderCell(IContainer container) =>
         container.BorderBottom(1).BorderColor(Colors.Grey.Darken1).PaddingVertical(4).DefaultTextStyle(x => x.Bold());

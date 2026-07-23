@@ -1,7 +1,10 @@
-const currencyFormatter = new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' });
+const currencyFormatters: Record<'ZAR' | 'USD', Intl.NumberFormat> = {
+  ZAR: new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }),
+  USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
+};
 
-export function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
+export function formatCurrency(value: number, currency: 'ZAR' | 'USD' = 'ZAR'): string {
+  return currencyFormatters[currency].format(value);
 }
 
 export function formatDate(value: string | Date): string {

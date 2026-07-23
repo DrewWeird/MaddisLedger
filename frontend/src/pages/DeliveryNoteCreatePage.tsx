@@ -111,7 +111,7 @@ export function DeliveryNoteCreatePage() {
             name="deliveryDate"
             control={control}
             render={({ field }) => (
-              <DateInput label="Delivery Date" value={field.value} onChange={(v) => field.onChange(v ?? new Date())} valueFormat="DD/MM/YYYY" />
+              <DateInput label="Delivery Date" value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} valueFormat="DD/MM/YYYY" />
             )}
           />
 

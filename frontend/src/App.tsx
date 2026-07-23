@@ -9,6 +9,11 @@ import { InvoiceViewPage } from './pages/InvoiceViewPage';
 import { DeliveryNotesListPage } from './pages/DeliveryNotesListPage';
 import { DeliveryNoteCreatePage } from './pages/DeliveryNoteCreatePage';
 import { DeliveryNoteViewPage } from './pages/DeliveryNoteViewPage';
+import { SuppliersPage } from './pages/SuppliersPage';
+import { SupplierInvoicesListPage } from './pages/SupplierInvoicesListPage';
+import { SupplierInvoiceCreatePage } from './pages/SupplierInvoiceCreatePage';
+import { SupplierInvoiceViewPage } from './pages/SupplierInvoiceViewPage';
+import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
@@ -24,6 +29,11 @@ function App() {
         <Route path="/delivery-notes" element={<DeliveryNotesListPage />} />
         <Route path="/delivery-notes/new" element={<DeliveryNoteCreatePage />} />
         <Route path="/delivery-notes/:id" element={<DeliveryNoteViewPage />} />
+        <Route path="/suppliers" element={<SuppliersPage />} />
+        <Route path="/supplier-invoices" element={<SupplierInvoicesListPage />} />
+        <Route path="/supplier-invoices/new" element={<SupplierInvoiceCreatePage />} />
+        <Route path="/supplier-invoices/:id" element={<SupplierInvoiceViewPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

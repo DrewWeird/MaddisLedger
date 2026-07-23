@@ -32,7 +32,7 @@ public class InvoiceService
 
         return await query
             .OrderByDescending(i => i.IssueDate).ThenByDescending(i => i.Id)
-            .Select(i => new InvoiceSummaryDto(i.Id, i.InvoiceNumber, i.CustomerId, i.CustomerNameSnapshot, i.IssueDate, i.Status.ToString(), i.Total))
+            .Select(i => new InvoiceSummaryDto(i.Id, i.InvoiceNumber, i.CustomerId, i.CustomerNameSnapshot, i.IssueDate, i.Status.ToString(), i.Total, i.Currency.ToString()))
             .ToListAsync();
     }
 
@@ -50,6 +50,17 @@ public class InvoiceService
         var customer = await _db.Customers.FindAsync(dto.CustomerId)
             ?? throw DomainException.NotFound("Customer", dto.CustomerId);
 
+        if (!Enum.TryParse<CurrencyCode>(dto.Currency, true, out var currency))
+            throw new DomainException($"Unknown currency '{dto.Currency}'.");
+
+        if (dto.ExchangeRateToZar <= 0)
+            throw new DomainException("Exchange rate must be greater than zero.");
+
+        // ZAR invoices always convert 1:1 — a non-1 rate here would be a data-integrity bug on the
+        // caller's side (the frontend never sends one, but guard against it regardless).
+        if (currency == CurrencyCode.Zar && dto.ExchangeRateToZar != 1)
+            throw new DomainException("A ZAR invoice's exchange rate must be exactly 1.");
+
         await using var transaction = await _db.Database.BeginTransactionAsync();
 
         var invoiceNumber = await _numbering.NextNumberAsync("INV", "INV");
@@ -62,7 +73,10 @@ public class InvoiceService
             CustomerAddressSnapshot = FormatCustomerAddress(customer),
             IssueDate = dto.IssueDate,
             Notes = dto.Notes,
-            Status = DocumentStatus.Active
+            Status = DocumentStatus.Active,
+            Currency = currency,
+            ExchangeRateToZar = dto.ExchangeRateToZar,
+            ExchangeRateAsOf = currency == CurrencyCode.Zar ? null : (dto.ExchangeRateAsOf ?? dto.IssueDate)
         };
 
         var sortOrder = 0;
@@ -84,6 +98,7 @@ public class InvoiceService
                 StockItemId = stockItem.Id,
                 DescriptionSnapshot = FormatStockItemDescription(stockItem),
                 UnitPriceSnapshot = line.UnitPrice,
+                CostPriceSnapshot = stockItem.CostPrice,
                 Quantity = line.Quantity,
                 LineTotal = lineTotal,
                 SortOrder = sortOrder++
@@ -179,13 +194,14 @@ public class InvoiceService
                 var delivered = l.DeliveryNoteLineItems
                     .Where(dl => dl.DeliveryNote!.Status == DocumentStatus.Active)
                     .Sum(dl => dl.QuantityDelivered);
-                return new InvoiceLineItemDto(l.Id, l.StockItemId, l.DescriptionSnapshot, l.UnitPriceSnapshot, l.Quantity, l.LineTotal, delivered, l.Quantity - delivered);
+                return new InvoiceLineItemDto(l.Id, l.StockItemId, l.DescriptionSnapshot, l.UnitPriceSnapshot, l.CostPriceSnapshot, l.Quantity, l.LineTotal, delivered, l.Quantity - delivered);
             })
             .ToList();
 
         return new InvoiceDto(
             invoice.Id, invoice.InvoiceNumber, invoice.CustomerId, invoice.CustomerNameSnapshot,
             invoice.CustomerAddressSnapshot, invoice.IssueDate, invoice.Status.ToString(), invoice.Total,
+            invoice.Currency.ToString(), invoice.ExchangeRateToZar, invoice.ExchangeRateAsOf,
             invoice.Notes, invoice.PdfPath, invoice.CreatedAt, lineItems);
     }
 

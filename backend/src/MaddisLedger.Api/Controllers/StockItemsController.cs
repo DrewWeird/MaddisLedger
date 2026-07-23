@@ -55,6 +55,7 @@ public class StockItemsController : ControllerBase
             Name = dto.Name,
             Size = dto.Size,
             UnitPrice = dto.UnitPrice,
+            CostPrice = dto.CostPrice,
             QuantityOnHand = dto.QuantityOnHand,
             QuantityOnOrder = dto.QuantityOnOrder,
             ReorderLevel = dto.ReorderLevel,
@@ -77,6 +78,7 @@ public class StockItemsController : ControllerBase
         item.Name = dto.Name;
         item.Size = dto.Size;
         item.UnitPrice = dto.UnitPrice;
+        item.CostPrice = dto.CostPrice;
         item.QuantityOnHand = dto.QuantityOnHand;
         item.QuantityOnOrder = dto.QuantityOnOrder;
         item.ReorderLevel = dto.ReorderLevel;
@@ -89,5 +91,5 @@ public class StockItemsController : ControllerBase
     }
 
     private static StockItemDto ToDto(StockItem s) => new(
-        s.Id, s.Code, s.Category, s.Name, s.Size, s.UnitPrice, s.QuantityOnHand, s.QuantityOnOrder, s.ReorderLevel, s.IsActive);
+        s.Id, s.Code, s.Category, s.Name, s.Size, s.UnitPrice, s.CostPrice, s.QuantityOnHand, s.QuantityOnOrder, s.ReorderLevel, s.IsActive);
 }

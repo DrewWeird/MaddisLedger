@@ -11,6 +11,11 @@ public class Invoice
     public DateTime IssueDate { get; set; }
     public DocumentStatus Status { get; set; } = DocumentStatus.Active;
     public decimal Total { get; set; }
+    public CurrencyCode Currency { get; set; } = CurrencyCode.Zar;
+    // "ZAR per 1 unit of Currency" — always 1 for ZAR invoices. Snapshotted at creation time so
+    // historical invoices/reports never change when the live rate moves later.
+    public decimal ExchangeRateToZar { get; set; } = 1;
+    public DateTime? ExchangeRateAsOf { get; set; }
     public string? Notes { get; set; }
     public string? PdfPath { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

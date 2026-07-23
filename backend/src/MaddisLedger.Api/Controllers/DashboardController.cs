@@ -40,6 +40,10 @@ public class DashboardController : ControllerBase
         var lowStockCount = await _db.StockItems.AsNoTracking()
             .CountAsync(s => s.IsActive && s.QuantityOnHand <= s.ReorderLevel);
 
-        return new DashboardSummaryDto(todaysInvoices.Count, todaysInvoices.Sum(i => i.Total), lowStockCount);
+        // Convert each invoice to ZAR using its own snapshotted rate — invoices may be in
+        // different currencies, so a plain sum of Total would mix ZAR and USD amounts.
+        var totalZar = todaysInvoices.Sum(i => i.Total * i.ExchangeRateToZar);
+
+        return new DashboardSummaryDto(todaysInvoices.Count, totalZar, lowStockCount);
     }
 }

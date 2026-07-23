@@ -156,6 +156,11 @@ function createMainWindow(): void {
     height: 800,
     show: false,
     autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      additionalArguments: [`--app-version=${app.getVersion()}`],
+    },
   });
 
   // PDF links point at the same-origin backend and open fine in Chromium's built-in PDF viewer

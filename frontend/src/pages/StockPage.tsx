@@ -27,6 +27,7 @@ const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   size: z.string().optional(),
   unitPrice: z.number().min(0, 'Must be 0 or more'),
+  costPrice: z.number().min(0, 'Must be 0 or more'),
   quantityOnHand: z.number().int('Must be a whole number'),
   quantityOnOrder: z.number().int('Must be a whole number').min(0),
   reorderLevel: z.number().int('Must be a whole number').min(0),
@@ -41,6 +42,7 @@ const EMPTY_VALUES: FormValues = {
   name: '',
   size: '',
   unitPrice: 0,
+  costPrice: 0,
   quantityOnHand: 0,
   quantityOnOrder: 0,
   reorderLevel: 0,
@@ -112,6 +114,8 @@ export function StockPage() {
             <Table.Th>Size</Table.Th>
             <Table.Th>Code</Table.Th>
             <Table.Th>Price</Table.Th>
+            <Table.Th>Cost</Table.Th>
+            <Table.Th>Margin</Table.Th>
             <Table.Th>On Hand</Table.Th>
             <Table.Th>On Order</Table.Th>
             <Table.Th>Status</Table.Th>
@@ -126,6 +130,8 @@ export function StockPage() {
               <Table.Td>{item.size ?? '—'}</Table.Td>
               <Table.Td>{item.code}</Table.Td>
               <Table.Td>{formatCurrency(item.unitPrice)}</Table.Td>
+              <Table.Td>{formatCurrency(item.costPrice)}</Table.Td>
+              <Table.Td>{formatCurrency(item.unitPrice - item.costPrice)}</Table.Td>
               <Table.Td>
                 <Text c={item.quantityOnHand <= item.reorderLevel ? 'red' : undefined}>
                   {item.quantityOnHand}
@@ -165,6 +171,21 @@ export function StockPage() {
                   value={field.value}
                   onChange={(value) => field.onChange(Number(value) || 0)}
                   error={errors.unitPrice?.message}
+                />
+              )}
+            />
+            <Controller
+              name="costPrice"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Cost Price (R)"
+                  description="What this item costs to make/procure — never shown to customers"
+                  min={0}
+                  decimalScale={2}
+                  value={field.value}
+                  onChange={(value) => field.onChange(Number(value) || 0)}
+                  error={errors.costPrice?.message}
                 />
               )}
             />

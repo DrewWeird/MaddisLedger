@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActionIcon,
   Alert,
@@ -24,8 +24,9 @@ import { useNavigate } from 'react-router-dom';
 import { useCreateCustomer, useCustomers } from '../api/customers';
 import { useStockItems } from '../api/stockItems';
 import { useCreateInvoice } from '../api/invoices';
+import { useExchangeRate } from '../api/exchangeRate';
 import { StockItemPicker } from '../components/StockItemPicker';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, formatDate } from '../utils/format';
 
 const lineItemSchema = z.object({
   stockItemId: z.number({ message: 'Select an item' }),
@@ -33,12 +34,20 @@ const lineItemSchema = z.object({
   unitPrice: z.number().min(0),
 });
 
-const schema = z.object({
-  customerId: z.number({ message: 'Select a customer' }),
-  issueDate: z.date(),
-  notes: z.string().optional(),
-  lineItems: z.array(lineItemSchema).min(1, 'Add at least one line item'),
-});
+const schema = z
+  .object({
+    customerId: z.number({ message: 'Select a customer' }),
+    issueDate: z.date(),
+    notes: z.string().optional(),
+    currency: z.enum(['ZAR', 'USD']),
+    exchangeRateToZar: z.number(),
+    exchangeRateAsOf: z.string().optional(),
+    lineItems: z.array(lineItemSchema).min(1, 'Add at least one line item'),
+  })
+  .refine((data) => data.currency === 'ZAR' || data.exchangeRateToZar > 0, {
+    message: 'Enter a valid exchange rate greater than zero',
+    path: ['exchangeRateToZar'],
+  });
 
 type FormValues = z.infer<typeof schema>;
 
@@ -60,11 +69,23 @@ export function InvoiceCreatePage() {
 
   const { control, register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { customerId: undefined, issueDate: new Date(), notes: '', lineItems: [] },
+    defaultValues: {
+      customerId: undefined,
+      issueDate: new Date(),
+      notes: '',
+      currency: 'ZAR',
+      exchangeRateToZar: 1,
+      exchangeRateAsOf: undefined,
+      lineItems: [],
+    },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'lineItems' });
   const lineItems = watch('lineItems');
+  const currency = watch('currency');
+  const exchangeRateToZar = watch('exchangeRateToZar');
+
+  const { data: liveRate, isFetching: isFetchingRate } = useExchangeRate('USD', 'ZAR', currency === 'USD');
 
   const customerForm = useForm<CustomerQuickAddValues>({
     resolver: zodResolver(customerQuickAddSchema),
@@ -72,6 +93,33 @@ export function InvoiceCreatePage() {
   });
 
   const grandTotal = lineItems.reduce((sum, line) => sum + (line.quantity || 0) * (line.unitPrice || 0), 0);
+
+  // Auto-fills the rate field once the live lookup resolves. Only runs when the live rate result
+  // itself changes (not on every keystroke), so a manual override the user types afterward sticks.
+  useEffect(() => {
+    if (currency === 'USD' && liveRate?.available && liveRate.rate) {
+      setValue('exchangeRateToZar', liveRate.rate);
+      setValue('exchangeRateAsOf', liveRate.asOf ?? undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveRate, currency]);
+
+  function handleCurrencyChange(value: string | null) {
+    const next = (value as 'ZAR' | 'USD') ?? 'ZAR';
+    setValue('currency', next);
+    if (next === 'ZAR') {
+      setValue('exchangeRateToZar', 1);
+      setValue('exchangeRateAsOf', undefined);
+    }
+  }
+
+  function handleCustomerChange(customerId: number | undefined) {
+    setValue('customerId', customerId as number);
+    const customer = customers?.find((c) => c.id === customerId);
+    if (customer) {
+      handleCurrencyChange(customer.defaultCurrency);
+    }
+  }
 
   async function onSubmitCustomer(values: CustomerQuickAddValues) {
     try {
@@ -83,6 +131,7 @@ export function InvoiceCreatePage() {
         addressLine2: null,
         city: null,
         postalCode: null,
+        defaultCurrency: 'ZAR',
       });
       setValue('customerId', customer.id);
       setCustomerModalOpen(false);
@@ -99,6 +148,9 @@ export function InvoiceCreatePage() {
         customerId: values.customerId,
         issueDate: values.issueDate.toISOString(),
         notes: values.notes || undefined,
+        currency: values.currency,
+        exchangeRateToZar: values.currency === 'ZAR' ? 1 : values.exchangeRateToZar,
+        exchangeRateAsOf: values.currency === 'ZAR' ? undefined : values.exchangeRateAsOf,
         lineItems: values.lineItems.map((l) => ({
           stockItemId: l.stockItemId,
           quantity: l.quantity,
@@ -130,7 +182,7 @@ export function InvoiceCreatePage() {
                   style={{ flex: 1 }}
                   data={(customers ?? []).map((c) => ({ value: String(c.id), label: c.name }))}
                   value={field.value ? String(field.value) : null}
-                  onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                  onChange={(v) => handleCustomerChange(v ? Number(v) : undefined)}
                   error={errors.customerId?.message}
                 />
               )}
@@ -140,13 +192,44 @@ export function InvoiceCreatePage() {
             </Button>
           </Group>
 
-          <Controller
-            name="issueDate"
-            control={control}
-            render={({ field }) => (
-              <DateInput label="Issue Date" value={field.value} onChange={(v) => field.onChange(v ?? new Date())} valueFormat="DD/MM/YYYY" />
+          <Group align="flex-end">
+            <Controller
+              name="issueDate"
+              control={control}
+              render={({ field }) => (
+                <DateInput label="Issue Date" value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} valueFormat="DD/MM/YYYY" />
+              )}
+            />
+            <Select
+              label="Currency"
+              data={[{ value: 'ZAR', label: 'ZAR (South African Rand)' }, { value: 'USD', label: 'USD (US Dollar)' }]}
+              value={currency}
+              onChange={handleCurrencyChange}
+            />
+            {currency === 'USD' && (
+              <Controller
+                name="exchangeRateToZar"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label="Exchange Rate (ZAR per USD)"
+                    min={0}
+                    decimalScale={4}
+                    value={field.value}
+                    onChange={(v) => field.onChange(Number(v) || 0)}
+                    error={errors.exchangeRateToZar?.message}
+                    description={
+                      isFetchingRate
+                        ? 'Fetching live rate...'
+                        : liveRate?.available
+                          ? `Live rate as of ${liveRate.asOf ? formatDate(liveRate.asOf) : ''}`
+                          : 'Live rate unavailable — enter manually'
+                    }
+                  />
+                )}
+              />
             )}
-          />
+          </Group>
 
           <Textarea label="Notes" {...register('notes')} autosize minRows={2} />
 
@@ -180,7 +263,12 @@ export function InvoiceCreatePage() {
                             value={pickerField.value ?? null}
                             onChange={(item) => {
                               pickerField.onChange(item?.id ?? undefined);
-                              if (item) setValue(`lineItems.${index}.unitPrice`, item.unitPrice);
+                              if (item) {
+                                const price = currency === 'USD' && exchangeRateToZar > 0
+                                  ? Math.round((item.unitPrice / exchangeRateToZar) * 100) / 100
+                                  : item.unitPrice;
+                                setValue(`lineItems.${index}.unitPrice`, price);
+                              }
                             }}
                             error={errors.lineItems?.[index]?.stockItemId?.message}
                           />
@@ -210,7 +298,7 @@ export function InvoiceCreatePage() {
                         )}
                       />
                     </Table.Td>
-                    <Table.Td>{formatCurrency((line?.quantity || 0) * (line?.unitPrice || 0))}</Table.Td>
+                    <Table.Td>{formatCurrency((line?.quantity || 0) * (line?.unitPrice || 0), currency)}</Table.Td>
                     <Table.Td>
                       <ActionIcon color="red" variant="subtle" onClick={() => remove(index)}>
                         <IconTrash size={16} />
@@ -231,7 +319,7 @@ export function InvoiceCreatePage() {
           </Button>
 
           <Group justify="flex-end">
-            <Title order={3}>Total: {formatCurrency(grandTotal)}</Title>
+            <Title order={3}>Total: {formatCurrency(grandTotal, currency)}</Title>
           </Group>
 
           <Group justify="flex-end">

@@ -1,6 +1,6 @@
 namespace MaddisLedger.Api.Entities;
 
-public class Customer
+public class Supplier
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -10,7 +10,6 @@ public class Customer
     public string? AddressLine2 { get; set; }
     public string? City { get; set; }
     public string? PostalCode { get; set; }
-    public CurrencyCode DefaultCurrency { get; set; } = CurrencyCode.Zar;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

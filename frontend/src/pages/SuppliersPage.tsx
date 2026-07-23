@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Badge, Button, Group, Modal, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import { Button, Group, Modal, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { notifications } from '@mantine/notifications';
-import { useCreateCustomer, useCustomers, useUpdateCustomer } from '../api/customers';
-import type { Customer } from '../api/types';
+import { useCreateSupplier, useSuppliers, useUpdateSupplier } from '../api/suppliers';
+import type { Supplier } from '../api/types';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -16,46 +16,44 @@ const schema = z.object({
   addressLine2: z.string().optional(),
   city: z.string().optional(),
   postalCode: z.string().optional(),
-  defaultCurrency: z.enum(['ZAR', 'USD']),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 const EMPTY_VALUES: FormValues = {
-  name: '', phone: '', email: '', addressLine1: '', addressLine2: '', city: '', postalCode: '', defaultCurrency: 'ZAR',
+  name: '', phone: '', email: '', addressLine1: '', addressLine2: '', city: '', postalCode: '',
 };
 
-export function CustomersPage() {
+export function SuppliersPage() {
   const [search, setSearch] = useState('');
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { data: customers, isLoading } = useCustomers({ search: search || undefined });
-  const createMutation = useCreateCustomer();
-  const updateMutation = useUpdateCustomer();
+  const { data: suppliers, isLoading } = useSuppliers({ search: search || undefined });
+  const createMutation = useCreateSupplier();
+  const updateMutation = useUpdateSupplier();
 
-  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: EMPTY_VALUES,
   });
 
   function openCreateModal() {
-    setEditingCustomer(null);
+    setEditingSupplier(null);
     reset(EMPTY_VALUES);
     setModalOpen(true);
   }
 
-  function openEditModal(customer: Customer) {
-    setEditingCustomer(customer);
+  function openEditModal(supplier: Supplier) {
+    setEditingSupplier(supplier);
     reset({
-      name: customer.name,
-      phone: customer.phone ?? '',
-      email: customer.email ?? '',
-      addressLine1: customer.addressLine1 ?? '',
-      addressLine2: customer.addressLine2 ?? '',
-      city: customer.city ?? '',
-      postalCode: customer.postalCode ?? '',
-      defaultCurrency: customer.defaultCurrency,
+      name: supplier.name,
+      phone: supplier.phone ?? '',
+      email: supplier.email ?? '',
+      addressLine1: supplier.addressLine1 ?? '',
+      addressLine2: supplier.addressLine2 ?? '',
+      city: supplier.city ?? '',
+      postalCode: supplier.postalCode ?? '',
     });
     setModalOpen(true);
   }
@@ -69,15 +67,14 @@ export function CustomersPage() {
       addressLine2: values.addressLine2 || null,
       city: values.city || null,
       postalCode: values.postalCode || null,
-      defaultCurrency: values.defaultCurrency,
     };
     try {
-      if (editingCustomer) {
-        await updateMutation.mutateAsync({ id: editingCustomer.id, dto });
-        notifications.show({ message: 'Customer updated', color: 'green' });
+      if (editingSupplier) {
+        await updateMutation.mutateAsync({ id: editingSupplier.id, dto });
+        notifications.show({ message: 'Supplier updated', color: 'green' });
       } else {
         await createMutation.mutateAsync(dto);
-        notifications.show({ message: 'Customer created', color: 'green' });
+        notifications.show({ message: 'Supplier created', color: 'green' });
       }
       setModalOpen(false);
     } catch (err) {
@@ -88,9 +85,9 @@ export function CustomersPage() {
   return (
     <Stack>
       <Group justify="space-between">
-        <Title order={2}>Customers</Title>
+        <Title order={2}>Suppliers</Title>
         <Button leftSection={<IconPlus size={16} />} onClick={openCreateModal}>
-          Add Customer
+          Add Supplier
         </Button>
       </Group>
 
@@ -107,24 +104,18 @@ export function CustomersPage() {
             <Table.Th>Phone</Table.Th>
             <Table.Th>Email</Table.Th>
             <Table.Th>City</Table.Th>
-            <Table.Th>Default Currency</Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {customers?.map((customer) => (
-            <Table.Tr key={customer.id}>
-              <Table.Td>{customer.name}</Table.Td>
-              <Table.Td>{customer.phone ?? '—'}</Table.Td>
-              <Table.Td>{customer.email ?? '—'}</Table.Td>
-              <Table.Td>{customer.city ?? '—'}</Table.Td>
+          {suppliers?.map((supplier) => (
+            <Table.Tr key={supplier.id}>
+              <Table.Td>{supplier.name}</Table.Td>
+              <Table.Td>{supplier.phone ?? '—'}</Table.Td>
+              <Table.Td>{supplier.email ?? '—'}</Table.Td>
+              <Table.Td>{supplier.city ?? '—'}</Table.Td>
               <Table.Td>
-                <Badge variant="light" color={customer.defaultCurrency === 'USD' ? 'blue' : 'gray'}>
-                  {customer.defaultCurrency}
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                <Button size="xs" variant="subtle" onClick={() => openEditModal(customer)}>
+                <Button size="xs" variant="subtle" onClick={() => openEditModal(supplier)}>
                   Edit
                 </Button>
               </Table.Td>
@@ -133,9 +124,9 @@ export function CustomersPage() {
         </Table.Tbody>
       </Table>
 
-      {!isLoading && customers?.length === 0 && <Text c="dimmed">No customers found.</Text>}
+      {!isLoading && suppliers?.length === 0 && <Text c="dimmed">No suppliers found.</Text>}
 
-      <Modal opened={modalOpen} onClose={() => setModalOpen(false)} title={editingCustomer ? 'Edit Customer' : 'Add Customer'}>
+      <Modal opened={modalOpen} onClose={() => setModalOpen(false)} title={editingSupplier ? 'Edit Supplier' : 'Add Supplier'}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack>
             <TextInput label="Name" {...register('name')} error={errors.name?.message} />
@@ -145,19 +136,6 @@ export function CustomersPage() {
             <TextInput label="Address Line 2" {...register('addressLine2')} />
             <TextInput label="City" {...register('city')} />
             <TextInput label="Postal Code" {...register('postalCode')} />
-            <Controller
-              name="defaultCurrency"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Default Currency"
-                  description="Used to pre-fill the currency when creating a new invoice for this customer"
-                  data={[{ value: 'ZAR', label: 'ZAR (South African Rand)' }, { value: 'USD', label: 'USD (US Dollar)' }]}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v ?? 'ZAR')}
-                />
-              )}
-            />
             <Group justify="flex-end">
               <Button variant="default" onClick={() => setModalOpen(false)}>Cancel</Button>
               <Button type="submit" loading={createMutation.isPending || updateMutation.isPending}>

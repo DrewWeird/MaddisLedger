@@ -5,6 +5,7 @@ public record InvoiceLineItemDto(
     int StockItemId,
     string DescriptionSnapshot,
     decimal UnitPriceSnapshot,
+    decimal CostPriceSnapshot,
     int Quantity,
     decimal LineTotal,
     int DeliveredQuantity,
@@ -19,6 +20,9 @@ public record InvoiceDto(
     DateTime IssueDate,
     string Status,
     decimal Total,
+    string Currency,
+    decimal ExchangeRateToZar,
+    DateTime? ExchangeRateAsOf,
     string? Notes,
     string? PdfPath,
     DateTime CreatedAt,
@@ -31,7 +35,8 @@ public record InvoiceSummaryDto(
     string CustomerNameSnapshot,
     DateTime IssueDate,
     string Status,
-    decimal Total);
+    decimal Total,
+    string Currency);
 
 public record CreateInvoiceLineItemDto(int StockItemId, int Quantity, decimal UnitPrice);
 
@@ -39,6 +44,9 @@ public record CreateInvoiceDto(
     int CustomerId,
     DateTime IssueDate,
     string? Notes,
+    string Currency,
+    decimal ExchangeRateToZar,
+    DateTime? ExchangeRateAsOf,
     List<CreateInvoiceLineItemDto> LineItems);
 
 public record VoidDocumentDto(string? Reason);

@@ -4,6 +4,7 @@ using MaddisLedger.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MaddisLedger.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723094803_AddStockItemCostPrice")]
+    partial class AddStockItemCostPrice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -94,9 +97,6 @@ namespace MaddisLedger.Api.Data.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int>("DefaultCurrency")
-                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
@@ -227,9 +227,6 @@ namespace MaddisLedger.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("Currency")
-                        .HasColumnType("int");
-
                     b.Property<string>("CustomerAddressSnapshot")
                         .HasColumnType("longtext");
 
@@ -239,13 +236,6 @@ namespace MaddisLedger.Api.Data.Migrations
                     b.Property<string>("CustomerNameSnapshot")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("ExchangeRateAsOf")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<decimal>("ExchangeRateToZar")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
@@ -385,122 +375,6 @@ namespace MaddisLedger.Api.Data.Migrations
                     b.ToTable("StockItems");
                 });
 
-            modelBuilder.Entity("MaddisLedger.Api.Entities.Supplier", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AddressLine1")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("AddressLine2")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("City")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Phone")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PostalCode")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Suppliers");
-                });
-
-            modelBuilder.Entity("MaddisLedger.Api.Entities.SupplierInvoice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("IssueDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SupplierReference")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<decimal>("Total")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("VoidReason")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("VoidedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SupplierId");
-
-                    b.ToTable("SupplierInvoices");
-                });
-
-            modelBuilder.Entity("MaddisLedger.Api.Entities.SupplierPayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("SupplierInvoiceId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SupplierInvoiceId");
-
-                    b.ToTable("SupplierPayments");
-                });
-
             modelBuilder.Entity("MaddisLedger.Api.Entities.DeliveryNote", b =>
                 {
                     b.HasOne("MaddisLedger.Api.Entities.Customer", "Customer")
@@ -569,28 +443,6 @@ namespace MaddisLedger.Api.Data.Migrations
                     b.Navigation("StockItem");
                 });
 
-            modelBuilder.Entity("MaddisLedger.Api.Entities.SupplierInvoice", b =>
-                {
-                    b.HasOne("MaddisLedger.Api.Entities.Supplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("MaddisLedger.Api.Entities.SupplierPayment", b =>
-                {
-                    b.HasOne("MaddisLedger.Api.Entities.SupplierInvoice", "SupplierInvoice")
-                        .WithMany("Payments")
-                        .HasForeignKey("SupplierInvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SupplierInvoice");
-                });
-
             modelBuilder.Entity("MaddisLedger.Api.Entities.DeliveryNote", b =>
                 {
                     b.Navigation("LineItems");
@@ -606,11 +458,6 @@ namespace MaddisLedger.Api.Data.Migrations
             modelBuilder.Entity("MaddisLedger.Api.Entities.InvoiceLineItem", b =>
                 {
                     b.Navigation("DeliveryNoteLineItems");
-                });
-
-            modelBuilder.Entity("MaddisLedger.Api.Entities.SupplierInvoice", b =>
-                {
-                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,6 +1,6 @@
 namespace MaddisLedger.Api.Dtos;
 
-public record CustomerDto(
+public record SupplierDto(
     int Id,
     string Name,
     string? Phone,
@@ -8,15 +8,13 @@ public record CustomerDto(
     string? AddressLine1,
     string? AddressLine2,
     string? City,
-    string? PostalCode,
-    string DefaultCurrency);
+    string? PostalCode);
 
-public record SaveCustomerDto(
+public record SaveSupplierDto(
     string Name,
     string? Phone,
     string? Email,
     string? AddressLine1,
     string? AddressLine2,
     string? City,
-    string? PostalCode,
-    string DefaultCurrency);
+    string? PostalCode);
