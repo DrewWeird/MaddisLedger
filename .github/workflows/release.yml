@@ -66,6 +66,19 @@ jobs:
           cd electron
           npm run build
 
+      - name: Ensure GitHub release exists
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # electron-builder uploads the installer and its .blockmap as separate parallel tasks, and
+        # each independently checks "does the release exist yet?" before uploading — under a race,
+        # both see "no" and both try to create it, and the second create fails with a 422 (already
+        # exists), which is treated as fatal and aborts the whole publish step. Pre-creating the
+        # release here means electron-builder only ever needs to upload assets to an already-
+        # existing release, sidestepping the race entirely.
+        run: |
+          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes || echo "Release already exists, continuing"
+
       - name: Package and publish Electron app
         shell: bash
         env:
