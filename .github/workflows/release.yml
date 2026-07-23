@@ -76,9 +76,7 @@ jobs:
         # exists), which is treated as fatal and aborts the whole publish step. Pre-creating the
         # release here removes that race. It must be created as a --draft: electron-builder treats
         # an existing *published* release as already finalized and silently skips uploading to it
-        # entirely (confirmed — a prior attempt at this fix with a published release "succeeded"
-        # with zero assets attached). A draft signals "still in progress," so electron-builder
-        # uploads to it and then publishes it itself, per electron-builder.yml's releaseType: release.
+        # entirely (confirmed on the v0.1.3 second attempt — zero assets attached).
         run: |
           gh release create "${GITHUB_REF_NAME}" --draft --title "${GITHUB_REF_NAME}" --generate-notes || echo "Release already exists, continuing"
 
@@ -89,3 +87,15 @@ jobs:
         run: |
           cd electron
           npx electron-builder --win --x64 --publish always
+
+      - name: Publish the GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # electron-builder.yml's releaseType: release only controls the draft/prerelease state for
+        # a release electron-builder creates itself from scratch — it does NOT change the state of
+        # a release that already existed (ours, pre-created above as a draft), confirmed on v0.1.3's
+        # third attempt: assets uploaded correctly, but the release stayed a draft. Publish it
+        # explicitly here now that all assets are attached.
+        run: |
+          gh release edit "${GITHUB_REF_NAME}" --draft=false
