@@ -36,3 +36,4 @@ publish:
   provider: github
   owner: DrewWeird
   repo: MaddisLedger
+  releaseType: release
