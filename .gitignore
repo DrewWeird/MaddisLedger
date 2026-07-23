@@ -22,6 +22,10 @@ electron/release/
 .DS_Store
 Thumbs.db
 
+# Misc local tooling artifacts
+.claude/
+**/.npm-cache/
+
 # IDE
 .vs/
 .vscode/
